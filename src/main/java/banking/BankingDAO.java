@@ -45,33 +45,37 @@ public class BankingDAO {
 	public void bankTransferTransaction(int fromID, int toID, float amount) throws Exception {
 		if (amount < 0)
 			throw new IllegalArgumentException("Le montant ne doit pas être négatif");
-	
+		// On calcule le résultat
 		String sql = "UPDATE Account SET Total = Total + ? WHERE CustomerID = ?";
 		try (	Connection myConnection = myDataSource.getConnection();
 			PreparedStatement statement = myConnection.prepareStatement(sql)) {
-			
-			myConnection.setAutoCommit(false); // On démarre une transaction
-			try {
-				// On débite le 1° client
-				statement.setFloat( 1, amount * -1);
-				statement.setInt(2, fromID);
-				int numberUpdated = statement.executeUpdate();
+                    
+                            myConnection.setAutoCommit(false); // On démarre une transaction
+                            try {
+                                    // On débite le 1° client
+                                    statement.setFloat( 1, amount * -1);
+                                    statement.setInt(2, fromID);
+                                    int numberUpdated1 = statement.executeUpdate();
 
-				// On crédite le 2° client
-				statement.clearParameters();
-				statement.setFloat( 1, amount);
-				statement.setInt(2, toID);
-				numberUpdated = statement.executeUpdate();
+                                    // On crédite le 2° client
+                                    statement.clearParameters();
+                                    statement.setFloat( 1, amount);
+                                    statement.setInt(2, toID);
+                                    int numberUpdated2 = statement.executeUpdate();
+                                    
+                                    if(numberUpdated1 == 0 || numberUpdated2 == 0){
+                                        myConnection.rollback();
+                                    }
 
-				// Tout s'est bien passé, on peut valider la transaction
-				myConnection.commit();
-			} catch (Exception ex) {
-				myConnection.rollback(); // On annule la transaction
-				throw ex;       
-			} finally {
-				 // On revient au mode de fonctionnement sans transaction
-				myConnection.setAutoCommit(true);				
-			}
+                                    // Tout s'est bien passé, on peut valider la transaction
+                                    myConnection.commit();
+                            } catch (Exception ex) {
+                                    myConnection.rollback(); // On annule la transaction
+                                    throw ex;       
+                            } finally {
+                                     // On revient au mode de fonctionnement sans transaction
+                                    myConnection.setAutoCommit(true);				
+                            }
 		}
 	}
 }

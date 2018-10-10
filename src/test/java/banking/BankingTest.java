@@ -45,23 +45,40 @@ public class BankingTest {
 	public void findExistingCustomer() throws SQLException {
 		float balance = myDAO.balanceForCustomer(0);
 		// attention à la comparaison des nombres à virgule flottante !
-		// Le dernier paramètre correspond à la marge d'erreur tolérable
 		assertEquals("Balance incorrecte !", 100.0f, balance, 0.001f);
 	}
 
 	@Test
 	public void successfulTransfer() throws Exception {
 		float amount = 10.0f;
-		int fromCustomer = 0; // Le client 0 dispose de 100€ dans le jeu de tests
+		int fromCustomer = 0;
 		int toCustomer = 1;
-		// On mémorise les balances dans les deux comptes avant la transaction
 		float before0 = myDAO.balanceForCustomer(fromCustomer);
 		float before1 = myDAO.balanceForCustomer(toCustomer);
-		// On exécute la transaction, qui doit réussir
 		myDAO.bankTransferTransaction(fromCustomer, toCustomer, amount);
 		// Les balances doivent avoir été mises à jour dans les 2 comptes
 		assertEquals("Balance incorrecte !", before0 - amount, myDAO.balanceForCustomer(fromCustomer), 0.001f);
 		assertEquals("Balance incorrecte !", before1 + amount, myDAO.balanceForCustomer(toCustomer), 0.001f);				
+	}
+        
+        @Test(expected = SQLException.class)
+	public void failureTransfer() throws Exception {
+		float amount = 150.0f;
+		int fromCustomer = 0;
+		int toCustomer = 1;
+		float before0 = myDAO.balanceForCustomer(fromCustomer);
+		float before1 = myDAO.balanceForCustomer(toCustomer);
+		myDAO.bankTransferTransaction(fromCustomer, toCustomer, amount);			
+	}
+        
+        @Test
+	public void transferToInexistedCustomer() throws Exception {
+		float amount = 10.0f;
+		int fromCustomer = 0;
+		int toCustomer = 6;
+		float before0 = myDAO.balanceForCustomer(fromCustomer);
+		float before1 = myDAO.balanceForCustomer(toCustomer);
+		myDAO.bankTransferTransaction(fromCustomer, toCustomer, amount);
 	}
 	
 
